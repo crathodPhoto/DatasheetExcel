@@ -1,0 +1,21 @@
+-----Instructions-----
+
+Step 1: Copy and paste the raw data files for the devices you need datasheets for into the folder titled "Paste Raw Data HERE"
+
+Step 2: Send Christian an excel file with the Serial Numbers and SKUs for the devices you need datasheets for
+
+Step 3: Wait for Christian to tell you they're done
+
+Step 4: Inspect the finished sheets and let Christian know if there are any problems
+
+
+
+
+-----Notes-----
+
+-DO NOT edit or delete any contents inside of the "Script Output" folder
+
+-DO NOT include any file folders inside of the "Paste Raw Data HERE", this will throw off the script
+
+-When you're ready to start a new batch of datasheets, please remove all existing files from inside the "Paste Raw Data HERE" folder
+
