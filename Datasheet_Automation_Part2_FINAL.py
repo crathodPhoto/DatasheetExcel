@@ -13,7 +13,7 @@ from docx.shared import Inches
 # -------------------------
 destination_folder = r"C:\Users\crathod\Documents\Datasheet Automation\Script Output"
 data_package_folder = os.path.join(destination_folder, "Data Package")
-excel_template_path = r"C:\Users\crathod\Documents\Datasheet Automation\Datasheet Graph Template 1.xlsm"
+excel_template_path = r"C:\Users\crathod\Documents\Datasheet Automation\Datasheet Graph Template 3.xlsm"
 word_template_path = r"C:\Users\crathod\Documents\Datasheet Automation\Datasheet Template.docx"
 os.makedirs(data_package_folder, exist_ok=True)
 
@@ -74,12 +74,17 @@ def resize_image(input_path, output_path, scale_percent):
 
 def update_chart_axes(sheet, chart, chart_number):
     if chart_number == 1:
-        # Chart 1: Wavelength vs Current (+ SMSR)
+        # Add debugging
+        print(f"DEBUG: Reading from Excel cells D13={sheet.Cells(13, 4).Value}, E13={sheet.Cells(13, 5).Value}")
+        
         axes_config = {
             'primary_y': (sheet.Cells(13, 4).Value, sheet.Cells(13, 5).Value),  # Wavelength
             'primary_x': (sheet.Cells(7, 4).Value, sheet.Cells(7, 5).Value),    # Current
             'secondary_y': (sheet.Cells(10, 4).Value, sheet.Cells(10, 5).Value) # SMSR
         }
+        
+        # Debug what Excel calculated
+        print(f"DEBUG: Excel calculated wavelength range: {axes_config['primary_y']}")
     elif chart_number == 2:
         # Chart 2: LIV Characteristics (Power vs Current + Voltage)
         axes_config = {
@@ -103,13 +108,18 @@ def update_chart_axes(sheet, chart, chart_number):
         # Chart-specific expansions
         if chart_number == 1:
             # Wavelength chart: very small expansion
-            y_max_expanded = y_max + 3  # Only +3nm as you specified
+            #sy_max=sy_max + 1  # SMSR can have more room
+            sy_min = -sy_max - 10  # SMSR axis should start from negative of max
+            y_min = y_min - 0.5  # Expand wavelength min slightly for better view
+            y_max_expanded = y_max + 2  # Only +2nm as you specified
             sy_max_expanded = sy_max * 1.2  # SMSR can have more room
-            x_max_expanded = x_max * 1.05   # Current: small expansion
+            x_max_expanded = x_max * 1.3   # Current: small expansion
+            
         else:
             # LIV chart: moderate expansion for power
+            sy_min = 0  # Voltage axis should start from 0
             y_max_expanded = max(y_max * 1, 0.05)  # Power: ensure at least 0.05W
-            sy_max_expanded = sy_max * 1.1  # Voltage: small expansion
+            sy_max_expanded = sy_max * 1.5  # Voltage: small expansion
             x_max_expanded = x_max * 1.05   # Current: small expansion
         
         # Set axes WITH custom units (full manual control)
@@ -119,17 +129,16 @@ def update_chart_axes(sheet, chart, chart_number):
         chart.Axes(1).MaximumScale = x_max_expanded
 
         # Custom units for Primary Y-axis (Left Y - Wavelength/Power)
-        y_range = y_max_expanded - y_min
         if chart_number == 1:
             # Chart 1: Wavelength axis - use smaller, precise units
-            chart.Axes(2).MajorUnit = 1.0  # 1nm intervals for wavelength
-            chart.Axes(2).MinorUnit = 0.2  # 0.2nm minor intervals
+            chart.Axes(2).MajorUnit = 0.5  # 0.5nm intervals for wavelength
+            chart.Axes(2).MinorUnit = 0.1  # 0.1nm minor intervals
             
             # Ensure minor ticks are visible on wavelength axis
             try:
                 chart.Axes(2).MinorTickMark = 2  # xlTickMarkOutside - show minor ticks outside
                 chart.Axes(2).HasMinorGridlines = False  # Don't show minor gridlines (cleaner look)
-                print(f"  Wavelength axis minor ticks enabled: 0.2nm intervals")
+                print(f"  Wavelength axis minor ticks enabled: 0.1nm intervals")
             except Exception as e:
                 print(f"  Minor tick configuration failed: {e}")
             
@@ -139,7 +148,6 @@ def update_chart_axes(sheet, chart, chart_number):
             chart.Axes(2).MinorUnit = 0.002  # 0.002W minor intervals
 
         # Custom units for X-axis (Current) - same for both charts
-        x_range = x_max_expanded - x_min
         chart.Axes(1).MajorUnit = 0.01   # 0.01A intervals for current
         chart.Axes(1).MinorUnit = 0.002  # 0.002A minor intervals
 
@@ -150,8 +158,8 @@ def update_chart_axes(sheet, chart, chart_number):
             # Custom units for Secondary Y-axis (Right Y - SMSR/Voltage)
             if chart_number == 1:
                 # Chart 1: SMSR axis
-                chart.Axes(2, 2).MajorUnit = 10  # 10dB intervals for SMSR
-                chart.Axes(2, 2).MinorUnit = 2   # 2dB minor intervals
+                chart.Axes(2, 2).MajorUnit = 10  # 5dB intervals for SMSR
+                chart.Axes(2, 2).MinorUnit = 1   # 1dB minor intervals
             else:
                 # Chart 2: Voltage axis
                 chart.Axes(2, 2).MajorUnit = 0.2  # 0.2V intervals for voltage
